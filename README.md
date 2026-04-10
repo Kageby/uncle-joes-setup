@@ -4,8 +4,8 @@ This repository contains the data and sample code you will need to start the Unc
 
 There are two components:
 
-- Database Setup
-- API Example
+- [Database Setup](#database-setup)
+- [API Example](#api-example)
 
 ## Database Setup
 
@@ -13,25 +13,17 @@ Follow these steps in order. You need a Google Cloud project with BigQuery enabl
 
 ---
 
-### Step 1 — Generate the CSV files
+### Step 1 — Review the CSV files
 
-Run these commands from the `Data Generation` folder:
-
-```bash
-poetry run python menu_builder.py
-poetry run python members_builder.py --count 500
-poetry run python order_builder.py --count 2000 --format bigquery
-```
-
-You should now have five CSV files:
+Included here are five CSV files that represent the tables in your database:
 
 | File | Description |
 |------|-------------|
-| `uncle_joes_locations.csv` | 485 store locations (already exists) |
+| `uncle_joes_locations.csv` | 485 store locations |
 | `uncle_joes_menu.csv` | 30 menu items |
-| `uncle_joes_coffee_club_members.csv` | 500 members |
-| `uncle_joes_orders.csv` | ~2,500 orders |
-| `uncle_joes_order_items.csv` | ~7,000+ line items |
+| `uncle_joes_coffee_club_members.csv` | Existing members |
+| `uncle_joes_orders.csv` | 20+ years of order history |
+| `uncle_joes_order_items.csv` | Line items for orders |
 
 ---
 
@@ -40,7 +32,7 @@ You should now have five CSV files:
 1. Go to [console.cloud.google.com/bigquery](https://console.cloud.google.com/bigquery)
 2. In the left panel, click the three dots next to your project name → **Create dataset**
 3. Set **Dataset ID** to `uncle_joes`
-4. Set **Data location** to `us-central1` (or whichever region your instructor specifies)
+4. Set **Data location** to `us-central1`
 5. Click **Create dataset**
 
 ---
@@ -192,7 +184,7 @@ erDiagram
 
 ---
 
-## API Example (`api_example/`)
+## API Example
 
 The `api_example/` subdirectory contains a minimal [FastAPI](https://fastapi.tiangolo.com/) application that demonstrates how to wire up a login endpoint with a hashed password against the BigQuery dataset.
 
