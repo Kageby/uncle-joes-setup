@@ -22,7 +22,7 @@ from pydantic import BaseModel
 app = FastAPI(title="Uncle Joe's Coffee API")
 
 # Replace with your GCP project ID
-GCP_PROJECT = "your-project"
+GCP_PROJECT = "mgmt-545-group-project-493414"
 DATASET = "uncle_joes"
 
 client = bigquery.Client(project=GCP_PROJECT)
