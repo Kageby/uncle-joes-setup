@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "uncle-joes-api-example"
+name = "uncle-joes-setup"
 version = "0.1.0"
 description = "Uncle Joe's Coffee Company — FastAPI login example"
 authors = []
