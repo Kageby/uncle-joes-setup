@@ -211,3 +211,5 @@ poetry run uvicorn main:app --reload
 > For this to work in Cloud Shell, you must set your Google Cloud project on the command line: `gcloud config set project <project_id>` 
 > 
 > You must also set `GCP_PROJECT` in `main.py` to your actual project ID before running
+>
+> Teammates: AlexaGonzalesTuesta
