@@ -102,3 +102,7 @@ Loyalty points are **not stored** — they are calculated dynamically.
 - Members earn **1 point per whole dollar spent**
 - Cents are ignored
 - Numbers are rounded down to the nearest whole integer
+
+### Team Members:
+
+Knittala, 
