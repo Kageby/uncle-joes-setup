@@ -106,3 +106,6 @@ Loyalty points are **not stored** — they are calculated dynamically.
 ### Team Members:
 
 Knittala, AlexaGonzalesTuesta, MaxChen2024 (Max Chen), Kageby (Dharma h)
+
+
+4/22 - Max Testing commit from bash
