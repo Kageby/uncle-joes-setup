@@ -76,8 +76,11 @@ def login(body: LoginRequest):
         "email": row["email"],
     }
 
+#================================================================================================#
+#--------------------------------------Menu Display Items----------------------------------------#
+#================================================================================================#
 
-
+# GET menu info (all)
 @app.get("/api/menu_items")
 def get_menu_items():
     """
@@ -105,3 +108,169 @@ def get_menu_items():
 
     menu_items = [dict(row) for row in results]
     return menu_items
+
+
+
+@app.get("/api/menu_items/{id}")
+def get_menu_item_by_id(id: str):
+    """
+    Retrieves the menu item specified by its id.
+    """
+    query = f"""
+        SELECT
+            id,
+            name,
+            category,
+            size,
+            calories,
+            price
+        FROM `{GCP_PROJECT}.{DATASET}.menu_items`
+        WHERE id = @id
+        LIMIT 1
+    """
+
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("id", "STRING", id)
+        ]
+    )
+
+    try:
+        results = list(client.query(query, job_config=job_config).result())
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database query failed: {str(e)}"
+        )
+
+    if not results:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Menu item with id {id} not found."
+        )
+
+    return dict(results[0])
+
+
+@app.get("/api/menu/calories")
+def get_menu_item_calories():
+    """
+    Retrieves item ids, names, and calories.
+    """
+    query = f"""
+        SELECT
+            id,
+            name,
+            calories
+        FROM `{GCP_PROJECT}.{DATASET}.menu_items`
+        ORDER BY id
+    """
+
+    try:
+        results = client.query(query).result()
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database query failed: {str(e)}"
+        )
+
+    return [dict(row) for row in results]
+
+
+@app.get("/api/menu/price")
+def get_menu_item_price():
+    """
+    Retrieves item ids, names, and prices.
+    """
+    query = f"""
+        SELECT
+            id,
+            name,
+            price
+        FROM `{GCP_PROJECT}.{DATASET}.menu_items`
+        ORDER BY id
+    """
+
+    try:
+        results = client.query(query).result()
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database query failed: {str(e)}"
+        )
+
+    return [dict(row) for row in results]
+
+
+@app.get("/api/menu/name")
+def get_menu_item_name():
+    """
+    Retrieves item ids and names.
+    """
+    query = f"""
+        SELECT
+            id,
+            name
+        FROM `{GCP_PROJECT}.{DATASET}.menu_items`
+        ORDER BY id
+    """
+
+    try:
+        results = client.query(query).result()
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database query failed: {str(e)}"
+        )
+
+    return [dict(row) for row in results]
+
+
+@app.get("/api/menu/category")
+def get_menu_item_category():
+    """
+    Retrieves item ids, names, and categories.
+    """
+    query = f"""
+        SELECT
+            id,
+            name,
+            category
+        FROM `{GCP_PROJECT}.{DATASET}.menu_items`
+        ORDER BY id
+    """
+
+    try:
+        results = client.query(query).result()
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database query failed: {str(e)}"
+        )
+
+    return [dict(row) for row in results]
+
+
+@app.get("/api/menu/size")
+def get_menu_item_size():
+    """
+    Retrieves item ids, names, and sizes.
+    """
+    query = f"""
+        SELECT
+            id,
+            name,
+            size
+        FROM `{GCP_PROJECT}.{DATASET}.menu_items`
+        ORDER BY id
+    """
+
+    try:
+        results = client.query(query).result()
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database query failed: {str(e)}"
+        )
+
+    return [dict(row) for row in results]
