@@ -75,3 +75,33 @@ def login(body: LoginRequest):
         "name": f"{row['first_name']} {row['last_name']}",
         "email": row["email"],
     }
+
+
+
+@app.get("/api/menu_items")
+def get_menu_items():
+    """
+    Retrieves all menu items from the menu_items table.
+    """
+    query = f"""
+        SELECT
+            id,
+            name,
+            category,
+            size,
+            calories,
+            price
+        FROM `{GCP_PROJECT}.{DATASET}.menu_items`
+        ORDER BY id
+    """
+
+    try:
+        results = client.query(query).result()
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database query failed: {str(e)}"
+        )
+
+    menu_items = [dict(row) for row in results]
+    return menu_items
