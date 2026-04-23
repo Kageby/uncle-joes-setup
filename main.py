@@ -98,8 +98,8 @@ def login(body: LoginRequest):
 #--------------------------------------Menu Endpoints (GP2 REQUIRED)-----------------------------#
 #================================================================================================#
 
-# GP2 REQUIRED: GET /menu — return all menu items
-@app.get("/menu")
+# GP2 REQUIRED: GET /menu — return menu items (Supports filtering)
+@app.get("/menu_items_filter")
 def get_menu(
     category: Optional[str] = Query(None, description="Filter by category (Coffee, Espresso, etc.)"),
     size: Optional[str] = Query(None, description="Filter by size (Small, Medium, Large)"),
@@ -145,8 +145,8 @@ def get_menu(
     return [dict(row) for row in results]
 
 
-# GP2 REQUIRED: GET /menu/{id} — return a single menu item
-@app.get("/menu/{id}")
+# GP2 REQUIRED: GET /menu_items/{id} — return a single menu item
+@app.get("/menu_items/{id}")
 def get_menu_item(id: str):
     """
     Retrieves the menu item specified by its id.
@@ -187,8 +187,7 @@ def get_menu_item(id: str):
     return dict(results[0])
 
 
-# Alias — keeps Max's /api/menu_items endpoint working for any existing callers
-@app.get("/api/menu_items")
+@app.get("/menu_items")
 def get_menu_items_alias():
     """
     Alias for /menu — retrieves all menu items from the menu_items table.
@@ -216,16 +215,7 @@ def get_menu_items_alias():
     return [dict(row) for row in results]
 
 
-# Alias — keeps Max's /api/menu_items/{id} endpoint working
-@app.get("/api/menu_items/{id}")
-def get_menu_item_by_id_alias(id: str):
-    """
-    Alias for /menu/{id} — retrieves the menu item specified by its id.
-    """
-    return get_menu_item(id)
-
-
-@app.get("/api/menu/calories")
+@app.get("/menu/calories")
 def get_menu_item_calories():
     """
     Retrieves item ids, names, and calories.
@@ -250,7 +240,7 @@ def get_menu_item_calories():
     return [dict(row) for row in results]
 
 
-@app.get("/api/menu_items/price")
+@app.get("/menu_items/price")
 def get_menu_item_price():
     """
     Retrieves item ids, names, and prices.
@@ -275,7 +265,7 @@ def get_menu_item_price():
     return [dict(row) for row in results]
 
 
-@app.get("/api/menu_items/name")
+@app.get("/menu_items/name")
 def get_menu_item_name():
     """
     Retrieves item ids and names.
