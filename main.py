@@ -88,7 +88,7 @@ def login(body: LoginRequest):
 
     return {
         "authenticated": True,
-        "member_id": row["id"],
+        "id": row["id"],
         "name": f"{row['first_name']} {row['last_name']}",
         "email": row["email"],
     }
@@ -145,9 +145,9 @@ def get_menu(
     return [dict(row) for row in results]
 
 
-# GP2 REQUIRED: GET /menu/{item_id} — return a single menu item
-@app.get("/menu/{item_id}")
-def get_menu_item(item_id: str):
+# GP2 REQUIRED: GET /menu/{id} — return a single menu item
+@app.get("/menu/{id}")
+def get_menu_item(id: str):
     """
     Retrieves the menu item specified by its id.
     """
@@ -166,7 +166,7 @@ def get_menu_item(item_id: str):
 
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
-            bigquery.ScalarQueryParameter("id", "STRING", item_id)
+            bigquery.ScalarQueryParameter("id", "STRING", id)
         ]
     )
 
@@ -181,7 +181,7 @@ def get_menu_item(item_id: str):
     if not results:
         raise HTTPException(
             status_code=404,
-            detail=f"Menu item with id {item_id} not found."
+            detail=f"Menu item with id {id} not found."
         )
 
     return dict(results[0])
@@ -220,7 +220,7 @@ def get_menu_items_alias():
 @app.get("/api/menu_items/{id}")
 def get_menu_item_by_id_alias(id: str):
     """
-    Alias for /menu/{item_id} — retrieves the menu item specified by its id.
+    Alias for /menu/{id} — retrieves the menu item specified by its id.
     """
     return get_menu_item(id)
 
@@ -250,7 +250,7 @@ def get_menu_item_calories():
     return [dict(row) for row in results]
 
 
-@app.get("/api/menu/price")
+@app.get("/api/menu_items/price")
 def get_menu_item_price():
     """
     Retrieves item ids, names, and prices.
@@ -275,7 +275,7 @@ def get_menu_item_price():
     return [dict(row) for row in results]
 
 
-@app.get("/api/menu/name")
+@app.get("/api/menu_items/name")
 def get_menu_item_name():
     """
     Retrieves item ids and names.
@@ -299,7 +299,7 @@ def get_menu_item_name():
     return [dict(row) for row in results]
 
 
-@app.get("/api/menu/category")
+@app.get("/api/menu_items/category")
 def get_menu_item_category():
     """
     Retrieves item ids, names, and categories.
@@ -324,7 +324,7 @@ def get_menu_item_category():
     return [dict(row) for row in results]
 
 
-@app.get("/api/menu/size")
+@app.get("/api/menu_items/size")
 def get_menu_item_size():
     """
     Retrieves item ids, names, and sizes.
@@ -406,9 +406,9 @@ def get_locations(
     return {"count": len(rows), "limit": limit, "offset": offset, "results": rows}
 
 
-# GP2 REQUIRED: GET /locations/{location_id} — return a single location
-@app.get("/locations/{location_id}")
-def get_location(location_id: str):
+# GP2 REQUIRED: GET /locations/{id} — return a single location
+@app.get("/locations/{id}")
+def get_location(id: str):
     """
     Retrieves a single location by its id.
     """
@@ -446,8 +446,8 @@ def get_location(location_id: str):
 #--------------------------------------Members Endpoints (GP3)-----------------------------------#
 #================================================================================================#
 
-@app.get("/members/{member_id}")
-def get_member(member_id: str):
+@app.get("/members/{id}")
+def get_member(_id: str):
     """
     Returns a member's public profile (no password or token).
     """
@@ -481,7 +481,7 @@ def get_member(member_id: str):
     if not results:
         raise HTTPException(
             status_code=404,
-            detail=f"Member with id {member_id} not found."
+            detail=f"Member with id {id} not found."
         )
 
     return dict(results[0])
@@ -491,9 +491,9 @@ def get_member(member_id: str):
 #--------------------------------------Orders & Order History (GP3)------------------------------#
 #================================================================================================#
 
-@app.get("/orders/member/{member_id}")
+@app.get("/orders/member/{id}")
 def get_member_order_history(
-    member_id: str,
+    id: str,
     limit: int = Query(50, ge=1, le=500),
 ):
     """
@@ -622,8 +622,8 @@ def get_order(order_id: str):
 #--------------------------------------Loyalty Points (GP3)--------------------------------------#
 #================================================================================================#
 
-@app.get("/members/{member_id}/points")
-def get_member_points(member_id: str):
+@app.get("/members/{id}/points")
+def get_member_points(id: str):
     """
     Returns a member's total Coffee Club points balance.
 
@@ -637,13 +637,13 @@ def get_member_points(member_id: str):
             IFNULL(SUM(FLOOR(order_total)), 0) AS total_points,
             IFNULL(SUM(order_total), 0) AS lifetime_spend
         FROM `{GCP_PROJECT}.{DATASET}.orders`
-        WHERE member_id = @mid
-          AND member_id IS NOT NULL
+        WHERE id = @mid
+          AND id IS NOT NULL
     """
 
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
-            bigquery.ScalarQueryParameter("mid", "STRING", member_id)
+            bigquery.ScalarQueryParameter("mid", "STRING", id)
         ]
     )
 
@@ -657,7 +657,7 @@ def get_member_points(member_id: str):
 
     row = results[0] if results else {}
     return {
-        "member_id": member_id,
+        "id": id,
         "order_count": int(row.get("order_count") or 0),
         "total_points": int(row.get("total_points") or 0),
         "lifetime_spend": float(row.get("lifetime_spend") or 0.0),
