@@ -62,7 +62,7 @@ def login(body: LoginRequest):
     # 2. Build a parameterized query to fetch the member's stored hash.
     #    Never interpolate user input directly into SQL strings.
     query = """
-        SELECT id, first_name, last_name, email, home_store, password
+        SELECT id, first_name, last_name, email, password
         FROM `{project}.{dataset}.members`
         WHERE email = @email
         LIMIT 1
@@ -89,11 +89,8 @@ def login(body: LoginRequest):
     return {
         "authenticated": True,
         "member_id": row["id"],
-        "first_name": row["first_name"],
-        "last_name": row["last_name"],
         "name": f"{row['first_name']} {row['last_name']}",
         "email": row["email"],
-        "home_store": row.get("home_store"),
     }
 
 
