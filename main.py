@@ -541,6 +541,130 @@ def get_order_receipt(order_id: str):
 
 
 #================================================================================================#
+#--------------------------------------Create Order Endpoint (GP3)-------------------------------#
+#================================================================================================#
+
+class OrderItemRequest(BaseModel):
+    menu_item_id: str
+    name: str
+    size: Optional[str] = None
+    category: Optional[str] = None
+    price: float
+    quantity: int
+
+
+class CreateOrderRequest(BaseModel):
+    member_id: Optional[str] = None
+    store_id: Optional[str] = None
+    fulfillment: Optional[str] = "pickup"
+    items: list[OrderItemRequest]
+
+
+@app.post("/orders")
+def create_order(body: CreateOrderRequest):
+    """
+    Creates a new order and matching order item rows.
+
+    Frontend expects:
+        POST /orders
+
+    Response must include:
+        order_id
+    """
+
+    if not body.items:
+        raise HTTPException(status_code=400, detail="Cart is empty.")
+
+    if not body.store_id:
+        raise HTTPException(status_code=400, detail="Store is required.")
+
+    order_id = f"ORD-{client.query('SELECT GENERATE_UUID() AS id').result().to_dataframe().iloc[0]['id']}"
+    member_id = body.member_id
+
+    # Calculate totals from submitted cart.
+    items_subtotal = round(
+        sum((item.price or 0) * item.quantity for item in body.items),
+        2
+    )
+
+    # 15% member discount if member_id exists.
+    order_discount = round(items_subtotal * 0.15, 2) if member_id else 0.0
+    order_subtotal = round(items_subtotal - order_discount, 2)
+
+    # Matches frontend cart.js taxRate = 0.06
+    sales_tax = round(order_subtotal * 0.06, 2)
+    order_total = round(order_subtotal + sales_tax, 2)
+
+    order_query = f"""
+        INSERT INTO `{GCP_PROJECT}.{DATASET}.orders`
+            (order_id, member_id, store_id, order_date,
+             items_subtotal, order_discount, order_subtotal, sales_tax, order_total)
+        VALUES
+            (@order_id, @member_id, @store_id, CURRENT_TIMESTAMP(),
+             @items_subtotal, @order_discount, @order_subtotal, @sales_tax, @order_total)
+    """
+
+    order_params = [
+        bigquery.ScalarQueryParameter("order_id", "STRING", order_id),
+        bigquery.ScalarQueryParameter("member_id", "STRING", member_id),
+        bigquery.ScalarQueryParameter("store_id", "STRING", body.store_id),
+        bigquery.ScalarQueryParameter("items_subtotal", "NUMERIC", items_subtotal),
+        bigquery.ScalarQueryParameter("order_discount", "NUMERIC", order_discount),
+        bigquery.ScalarQueryParameter("order_subtotal", "NUMERIC", order_subtotal),
+        bigquery.ScalarQueryParameter("sales_tax", "NUMERIC", sales_tax),
+        bigquery.ScalarQueryParameter("order_total", "NUMERIC", order_total),
+    ]
+
+    try:
+        client.query(
+            order_query,
+            job_config=bigquery.QueryJobConfig(query_parameters=order_params)
+        ).result()
+
+        for item in body.items:
+            line_id = f"LINE-{client.query('SELECT GENERATE_UUID() AS id').result().to_dataframe().iloc[0]['id']}"
+
+            item_query = f"""
+                INSERT INTO `{GCP_PROJECT}.{DATASET}.order_items`
+                    (id, order_id, menu_item_id, item_name, size, quantity, price)
+                VALUES
+                    (@id, @order_id, @menu_item_id, @item_name, @size, @quantity, @price)
+            """
+
+            item_params = [
+                bigquery.ScalarQueryParameter("id", "STRING", line_id),
+                bigquery.ScalarQueryParameter("order_id", "STRING", order_id),
+                bigquery.ScalarQueryParameter("menu_item_id", "STRING", item.menu_item_id),
+                bigquery.ScalarQueryParameter("item_name", "STRING", item.name),
+                bigquery.ScalarQueryParameter("size", "STRING", item.size),
+                bigquery.ScalarQueryParameter("quantity", "INT64", item.quantity),
+                bigquery.ScalarQueryParameter("price", "NUMERIC", item.price),
+            ]
+
+            client.query(
+                item_query,
+                job_config=bigquery.QueryJobConfig(query_parameters=item_params)
+            ).result()
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create order: {str(e)}"
+        )
+
+    return {
+        "order_id": order_id,
+        "member_id": member_id,
+        "store_id": body.store_id,
+        "items_subtotal": items_subtotal,
+        "order_discount": order_discount,
+        "order_subtotal": order_subtotal,
+        "sales_tax": sales_tax,
+        "order_total": order_total,
+        "items": [item.dict() for item in body.items]
+    }
+
+#================================================================================================#
 #--------------------------------------Loyalty Points (GP3)--------------------------------------#
 #================================================================================================#
 
