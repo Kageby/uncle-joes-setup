@@ -461,7 +461,7 @@ def get_member_order_history(
 
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
-            bigquery.ScalarQueryParameter("mid", "STRING", member_id),
+            bigquery.ScalarQueryParameter("mid", "STRING", id),
             bigquery.ScalarQueryParameter("limit", "INT64", limit),
         ]
     )
@@ -475,7 +475,7 @@ def get_member_order_history(
         )
 
     orders = [dict(row) for row in results]
-    return {"member_id": member_id, "count": len(orders), "orders": orders}
+    return {"id": id, "count": len(orders), "orders": orders}
 
 
 @app.get("/receipt/orders/{order_id}")
