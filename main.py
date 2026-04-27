@@ -159,7 +159,7 @@ def get_filtered_menu(
         
         # Check if empty
         if not results:
-            return {"message": "No items found!"}
+            return [] ## return blank array to fix cold start issue leading to reload necessity
         return results
     except Exception as e:
         raise HTTPException(
