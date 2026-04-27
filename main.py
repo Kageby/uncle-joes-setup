@@ -669,8 +669,8 @@ def get_member_points(id: str):
             IFNULL(SUM(FLOOR(order_total)), 0) AS total_points,
             IFNULL(SUM(order_total), 0) AS lifetime_spend
         FROM `{GCP_PROJECT}.{DATASET}.orders`
-        WHERE id = @mid
-          AND id IS NOT NULL
+        WHERE member_id = @mid
+          AND member_id IS NOT NULL
     """
 
     job_config = bigquery.QueryJobConfig(
