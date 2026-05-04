@@ -822,11 +822,11 @@ def get_points_for_order(order_id: str):
 
 
 def get_bq_client():
-    return bigquery.Client()
+    return bigquery.Client(project="mgmt-545-group-project-493414")
 
-# Request body model 
 class UpdateHomeStoreRequest(BaseModel):
     home_store: str
+
 
 @app.put("/update_profile/{id}/home_store")
 def update_home_store(
@@ -835,14 +835,29 @@ def update_home_store(
     bq: bigquery.Client = Depends(get_bq_client)
 ):
     """
-    Update member home_store after validating selected location
+    Update member home_store after validating both the member and selected location.
     """
+
+    member_query = f"""
+        SELECT id
+        FROM `{GCP_PROJECT}.{DATASET}.members`
+        WHERE id = @id
+        LIMIT 1
+    """
+
+    member_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("id", "STRING", id)
+        ]
+    )
+
     validate_query = f"""
         SELECT id
         FROM `{GCP_PROJECT}.{DATASET}.locations`
         WHERE id = @home_store
         LIMIT 1
     """
+
     validate_config = bigquery.QueryJobConfig(
         query_parameters=[
             bigquery.ScalarQueryParameter("home_store", "STRING", request.home_store)
@@ -850,11 +865,20 @@ def update_home_store(
     )
 
     try:
+        member_result = list(
+            bq.query(member_query, job_config=member_config).result()
+        )
+
+        if not member_result:
+            raise HTTPException(status_code=404, detail="Member not found")
+
         validation_result = list(
             bq.query(validate_query, job_config=validate_config).result()
         )
+
         if not validation_result:
             raise HTTPException(status_code=404, detail="Location not found")
+
         update_query = f"""
             UPDATE `{GCP_PROJECT}.{DATASET}.members`
             SET home_store = @home_store
@@ -863,13 +887,13 @@ def update_home_store(
 
         update_config = bigquery.QueryJobConfig(
             query_parameters=[
-                bigquery.ScalarQueryParameter(
-                    "home_store", "STRING", request.home_store
-                ),
+                bigquery.ScalarQueryParameter("home_store", "STRING", request.home_store),
                 bigquery.ScalarQueryParameter("id", "STRING", id),
             ]
         )
+
         bq.query(update_query, job_config=update_config).result()
+
         return {
             "message": "Home store updated successfully",
             "id": id,
